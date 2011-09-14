@@ -458,7 +458,6 @@ class Tag(models.Model):
     A tag.
     """
     name = models.CharField(_('name'), max_length=50, unique=True, db_index=True)
-
     objects = TagManager()
 
     class Meta:
@@ -466,8 +465,17 @@ class Tag(models.Model):
         verbose_name = _('tag')
         verbose_name_plural = _('tags')
 
+    def save(self,*args,**kwargs):
+        if not self.id:
+            self.name = slugify(self.name)
+        super(Tag, self).save(*args,**kwargs)
+        
     def __unicode__(self):
         return self.name
+        
+    def get_absolute_url(self):
+        return '/blog/tags/%s' % self.slug
+        
 
 class TaggedItem(models.Model):
     """
