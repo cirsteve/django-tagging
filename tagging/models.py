@@ -33,8 +33,8 @@ class TagManager(models.Manager):
         current_tags = list(self.filter(items__content_type__pk=ctype.pk,
                                         items__object_id=obj.pk))
         updated_tag_names = parse_tag_input(tag_names)
-        if settings.FORCE_LOWERCASE_TAGS:
-            updated_tag_names = [t.lower() for t in updated_tag_names]
+        if settings.FORCE_SLUGS:
+            updated_tag_names = [slugify(t) for t in updated_tag_names]
 
         # Remove tags which no longer apply
         tags_for_removal = [tag for tag in current_tags \
@@ -60,8 +60,8 @@ class TagManager(models.Manager):
         if len(tag_names) > 1:
             raise AttributeError(_('Multiple tags were given: "%s".') % tag_name)
         tag_name = tag_names[0]
-        if settings.FORCE_LOWERCASE_TAGS:
-            tag_name = tag_name.lower()
+        if settings.FORCE_SLUGS:
+            tag_name = slugify(tag_name)
         tag, created = self.get_or_create(name=tag_name)
         ctype = ContentType.objects.get_for_model(obj)
         TaggedItem._default_manager.get_or_create(
@@ -465,11 +465,6 @@ class Tag(models.Model):
         ordering = ('name',)
         verbose_name = _('tag')
         verbose_name_plural = _('tags')
-
-    def save(self,*args,**kwargs):
-        if not self.id:
-            self.name = slugify(self.name)
-        super(Tag, self).save(*args,**kwargs)
         
     def __unicode__(self):
         return self.name
